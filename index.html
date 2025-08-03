@@ -1,0 +1,676 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusVR - 沉浸式虛擬遊戲世界</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script type="module" src="/entry.mjs">
+  </script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'vr-dark': '#0F111A',
+            'vr-black': '#080A12',
+            'vr-purple': '#7B2FFD',
+            'vr-cyan': '#00F0FF',
+            'vr-pink': '#FF2E93',
+            'vr-blue': '#0066FF',
+            'vr-gray': '#1E2132'
+          },
+          fontFamily: {
+            'cyber': ['Orbitron', 'system-ui', 'sans-serif'],
+            'sans': ['Inter', 'system-ui', 'sans-serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'glow': 'glow 2s ease-in-out infinite alternate',
+            'colorFlash': 'colorFlash 3s ease-in-out infinite alternate'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-20px)' }
+            },
+            glow: {
+              '0%': { boxShadow: '0 0 5px rgba(123, 47, 253, 0.5), 0 0 10px rgba(123, 47, 253, 0.3)' },
+              '100%': { boxShadow: '0 0 10px rgba(123, 47, 253, 0.8), 0 0 20px rgba(123, 47, 253, 0.5)' }
+            },
+            colorFlash: {
+              '0%': { color: 'white' },
+              '100%': { color: '#00F0FF' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow-glow {
+        text-shadow: 0 0 10px currentColor, 0 0 20px currentColor/70;
+      }
+      .cyber-border {
+        position: relative;
+        border: 1px solid theme('colors.vr-purple/50');
+      }
+      .cyber-border::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, theme('colors.vr-cyan'), transparent);
+      }
+      .cyber-border::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, theme('colors.vr-pink'), transparent);
+      }
+      .grid-pattern {
+        background-image: 
+          linear-gradient(rgba(123, 47, 253, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(123, 47, 253, 0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+      }
+      .hover-scale {
+        transition: transform 0.3s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.03);
+      }
+    }
+  </style>
+</head>
+<body class="bg-vr-black text-white font-sans overflow-x-hidden">
+  <div class="fixed inset-0 grid-pattern opacity-30 z-0"></div>
+  
+  <header class="fixed top-0 left-0 right-0 bg-vr-black/80 backdrop-blur-md z-40 border-b border-vr-purple/30 transition-all duration-300">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex justify-between items-center">
+        <a href="#" class="flex items-center space-x-2">
+  <span class="font-cyber font-bold text-xl tracking-wider text-white">
+    NEXUS<span class="text-vr-cyan">VR</span>
+  </span>
+</a>    
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#games" class="text-gray-300 hover:text-vr-cyan transition-colors relative group">
+            遊戲庫
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vr-cyan transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#devices" class="text-gray-300 hover:text-vr-cyan transition-colors relative group">
+            設備評測
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vr-cyan transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#news" class="text-gray-300 hover:text-vr-cyan transition-colors relative group">
+            行業動態
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vr-cyan transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#development" class="text-gray-300 hover:text-vr-pink transition-colors relative group">
+            開發指南
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vr-pink transition-all duration-300 group-hover:w-full"></span>
+          </a>
+        </nav>
+        
+        <button id="mobile-menu-btn" class="md:hidden text-white text-2xl">
+          <i class="fa fa-bars"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div id="mobile-menu" class="md:hidden hidden bg-vr-gray/95 backdrop-blur-md border-t border-vr-purple/30">
+      <div class="container mx-auto px-4 py-3 flex flex-col space-y-4">
+        <a href="#games" class="py-2 text-gray-300 hover:text-vr-cyan transition-colors">遊戲庫</a>
+        <a href="#devices" class="py-2 text-gray-300 hover:text-vr-cyan transition-colors">設備評測</a>
+        <a href="#news" class="py-2 text-gray-300 hover:text-vr-cyan transition-colors">行業動態</a>
+        <a href="#development" class="py-2 text-gray-300 hover:text-vr-pink transition-colors">開發指南</a>
+        <button class="bg-vr-purple hover:bg-vr-purple/80 text-white px-5 py-2 rounded-md font-medium transition-all w-full">
+          <i class="fa fa-user-circle mr-2"></i> 登錄
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-vr-purple/20 rounded-full filter blur-[100px]"></div>
+      <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-vr-cyan/20 rounded-full filter blur-[100px]"></div>
+      
+      <div class="container mx-auto px-4 z-10 pt-10 pb-20">
+        <div class="flex flex-col lg:flex-row items-center gap-12">
+          <div class="lg:w-1/2 space-y-6">
+            <div class="inline-block px-4 py-1.5 bg-vr-purple/20 border border-vr-purple/40 rounded-full text-vr-purple text-sm font-medium">
+              下一代虛擬體驗
+            </div>
+            <h1 class="font-cyber font-bold text-[clamp(2.5rem,8vw,4.5rem)] leading-tight animate-colorFlash">
+              突破現實<br>
+              <span class="text-vr-cyan text-shadow-glow">進入虛擬世界</span>
+            </h1>
+            <p class="text-gray-300 text-lg max-w-lg">
+              探索最前沿的VR遊戲體驗，從沉浸式冒險到競技射擊，NexusVR帶您領略虛擬世界的無限可能。
+            </p>
+            <div class="flex flex-wrap gap-4 pt-4">
+              <button class="bg-gradient-to-r from-vr-purple to-vr-cyan text-white px-8 py-3 rounded-md font-cyber font-medium transition-all duration-300 hover:shadow-lg hover:shadow-vr-purple/30 animate-glow">
+                立即探索
+              </button>
+              <button class="border border-vr-cyan/50 text-vr-cyan hover:bg-vr-cyan/10 px-8 py-3 rounded-md font-medium transition-all duration-300 flex items-center">
+                <i class="fa fa-play-circle mr-2"></i> 觀看演示
+              </button>
+            </div>
+            <div class="flex items-center gap-6 pt-6">
+              <div class="flex -space-x-2">
+                <img src="https://picsum.photos/100/100?random=1" alt="用戶頭像" class="w-10 h-10 rounded-full border-2 border-vr-black">
+                <img src="https://picsum.photos/100/100?random=2" alt="用戶頭像" class="w-10 h-10 rounded-full border-2 border-vr-black">
+                <img src="https://picsum.photos/100/100?random=3" alt="用戶頭像" class="w-10 h-10 rounded-full border-2 border-vr-black">
+                <div class="w-10 h-10 rounded-full bg-vr-gray border-2 border-vr-black flex items-center justify-center text-xs">
+                  +2k
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center text-yellow-400">
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star-half-o"></i>
+                  <span class="text-gray-300 ml-2">4.8/5</span>
+                </div>
+                <p class="text-gray-400 text-sm">來自2,000+玩家的評價</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="lg:w-1/2 relative">
+            <div class="relative z-10 animate-float">
+       
+              <video src="https://www.ign.com.cn/sv/videos/zencoder/2022/01/23/1920/ff59d0aa7974eb00a28feae78e3877fd-3906000-1642994783.mp4" 
+                     alt="VR遊戲體驗" 
+                     class="rounded-lg cyber-border w-full" 
+                     controls 
+                     loading="lazy">
+                您的瀏覽器不支持視頻播放
+              </video>
+              <div class="absolute -bottom-5 -right-5 bg-vr-pink text-white px-4 py-2 rounded-md font-cyber text-sm border border-vr-pink/50">
+                新品發布
+              </div>
+            </div>
+            
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-r from-vr-purple to-vr-cyan rounded-lg filter blur-3xl opacity-30 -z-10"></div>
+            <div class="absolute -top-10 -left-10 w-20 h-20 border border-vr-cyan/30 rounded-full animate-pulse"></div>
+            <div class="absolute -bottom-5 -right-5 w-16 h-16 border border-vr-pink/30 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+          </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce">
+          <span class="text-gray-400 text-sm mb-2">向下滾動探索更多</span>
+          <i class="fa fa-chevron-down text-vr-cyan"></i>
+        </div>
+      </div>
+    </section>
+    
+    <section id="games" class="py-20 relative">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-end mb-12">
+          <div>
+            <h2 class="font-cyber font-bold text-[clamp(1.8rem,5vw,3rem)] mb-3 animate-colorFlash">
+              熱門<span class="text-vr-purple">VR遊戲</span>
+            </h2>
+            <p class="text-gray-400 max-w-2xl">探索玩家最愛的VR遊戲，從動作冒險到解謎闖關，總有一款適合你</p>
+          </div>
+          <a href="#" class="hidden md:flex items-center text-vr-cyan hover:text-white transition-colors group">
+            查看全部遊戲
+            <i class="fa fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+          </a>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div class="bg-vr-gray/50 rounded-lg overflow-hidden cyber-border hover-scale group">
+            <div class="relative">
+              <img src="https://upload.cc/i1/2025/08/03/kZWoVO.png" 
+                   alt="Half-Life: Alyx" 
+                   class="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                   loading="lazy">
+              <div class="absolute top-3 left-3 bg-vr-blue/80 text-white text-xs px-2 py-1 rounded">
+                動作冒險
+              </div>
+              <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center">
+                <i class="fa fa-star text-yellow-400 mr-1"></i> 9.5
+              </div>
+            </div>
+            <div class="p-5">
+              <h3 class="font-cyber font-bold text-lg mb-2 group-hover:text-vr-cyan transition-colors">Half-Life: Alyx</h3>
+              <p class="text-gray-400 text-sm mb-4 line-clamp-2">
+                 Valve推出的標誌性VR射擊遊戲，沉浸式劇情與創新玩法的完美結合。
+              </p>
+              <div class="flex justify-between items-center">
+                <span class="text-vr-pink font-medium">¥198</span>
+                <button class="text-xs bg-vr-purple/20 hover:bg-vr-purple/30 text-vr-purple px-3 py-1 rounded transition-colors">
+                  加入購物車
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 其余游戏卡片保持结构，均添加图片懒加载 -->
+          <div class="bg-vr-gray/50 rounded-lg overflow-hidden cyber-border hover-scale group">
+            <div class="relative">
+              <img src="https://upload.cc/i1/2025/08/03/jWi6HQ.png" 
+                   alt="Beat Saber" 
+                   class="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                   loading="lazy">
+              <div class="absolute top-3 left-3 bg-vr-pink/80 text-white text-xs px-2 py-1 rounded">
+                音樂節奏
+              </div>
+              <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center">
+                <i class="fa fa-star text-yellow-400 mr-1"></i> 9.2
+              </div>
+            </div>
+            <div class="p-5">
+              <h3 class="font-cyber font-bold text-lg mb-2 group-hover:text-vr-cyan transition-colors">Beat Saber</h3>
+              <p class="text-gray-400 text-sm mb-4 line-clamp-2">
+                揮舞光劍切割節奏方塊，隨著音樂節拍舞動，體驗沉浸式音樂遊戲。
+              </p>
+              <div class="flex justify-between items-center">
+                <span class="text-vr-pink font-medium">¥148</span>
+                <button class="text-xs bg-vr-purple/20 hover:bg-vr-purple/30 text-vr-purple px-3 py-1 rounded transition-colors">
+                  加入購物車
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-vr-gray/50 rounded-lg overflow-hidden cyber-border hover-scale group">
+            <div class="relative">
+              <img src="https://upload.cc/i1/2025/08/03/4re1vG.png" 
+                   alt="Resident Evil 4 VR" 
+                   class="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                   loading="lazy">
+              <div class="absolute top-3 left-3 bg-red-600/80 text-white text-xs px-2 py-1 rounded">
+                恐怖生存
+              </div>
+              <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center">
+                <i class="fa fa-star text-yellow-400 mr-1"></i> 9.0
+              </div>
+            </div>
+            <div class="p-5">
+              <h3 class="font-cyber font-bold text-lg mb-2 group-hover:text-vr-cyan transition-colors">Resident Evil 4 VR</h3>
+              <p class="text-gray-400 text-sm mb-4 line-clamp-2">
+                經典恐怖遊戲的VR重製版，身臨其境的恐怖體驗讓你心跳加速。
+              </p>
+              <div class="flex justify-between items-center">
+                <span class="text-vr-pink font-medium">¥248</span>
+                <button class="text-xs bg-vr-purple/20 hover:bg-vr-purple/30 text-vr-purple px-3 py-1 rounded transition-colors">
+                  加入購物車
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-vr-gray/50 rounded-lg overflow-hidden cyber-border hover-scale group">
+            <div class="relative">
+              <img src="https://upload.cc/i1/2025/08/03/l2fFsi.png" 
+                   alt="VRChat" 
+                   class="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                   loading="lazy">
+              <div class="absolute top-3 left-3 bg-green-500/80 text-white text-xs px-2 py-1 rounded">
+                社交平台
+              </div>
+              <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center">
+                <i class="fa fa-star text-yellow-400 mr-1"></i> 8.8
+              </div>
+            </div>
+            <div class="p-5">
+              <h3 class="font-cyber font-bold text-lg mb-2 group-hover:text-vr-cyan transition-colors">VRChat</h3>
+              <p class="text-gray-400 text-sm mb-4 line-clamp-2">
+                虛擬社交平台，創建個性化 avatar，與全球玩家在虛擬世界互動。
+              </p>
+              <div class="flex justify-between items-center">
+                <span class="text-green-400 font-medium">免費</span>
+                <button class="text-xs bg-vr-purple/20 hover:bg-vr-purple/30 text-vr-purple px-3 py-1 rounded transition-colors">
+                  立即體驗
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-center mt-10 md:hidden">
+          <a href="#" class="inline-flex items-center text-vr-cyan hover:text-white transition-colors group">
+            查看全部遊戲
+            <i class="fa fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+    
+    <section id="devices" class="py-20 relative bg-vr-dark">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-vr-blue/10 rounded-full filter blur-[120px]"></div>
+      
+      <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-16">
+          <h2 class="font-cyber font-bold text-[clamp(1.8rem,5vw,3rem)] mb-3 animate-colorFlash">
+            VR<span class="text-vr-blue">設備評測</span>
+          </h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">
+            從入門級到專業級，我們為您提供最全面的VR設備評測和選購指南
+          </p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div class="bg-vr-gray/30 rounded-xl overflow-hidden cyber-border hover-scale group">
+            <div class="relative">
+              <img src="https://upload.cc/i1/2025/08/03/tUBGlq.png" 
+                   alt="Meta Quest 3" 
+                   class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
+                   loading="lazy">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+              <div class="absolute bottom-6 left-6">
+                <span class="inline-block px-3 py-1 bg-vr-blue/80 text-white rounded-full text-xs font-medium mb-2">
+                  最新評測
+                </span>
+                <h3 class="font-cyber font-bold text-2xl text-white">Meta Quest 3</h3>
+                <p class="text-gray-300 text-sm">性價比之王的全面升級</p>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center text-sm text-gray-400 mb-4">
+                <span>發布日期: 2023-10-10</span>
+                <span class="mx-3">•</span>
+                <span>價格: ¥3,299 起</span>
+                <span class="mx-3">•</span>
+                <span>評分: 9.3/10</span>
+              </div>
+              <p class="text-gray-300 mb-6">
+                Meta Quest 3作為主流VR一體機的標杆產品，帶來了更高分辨率的顯示屏、更輕薄的設計和更強的處理性能。本世代最值得入手的VR設備之一，適合各類玩家。
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-vr-black/50 p-3 rounded border border-vr-blue/20">
+                  <div class="text-vr-blue font-medium mb-1">2064×2208</div>
+                  <div class="text-gray-400 text-xs">單眼分辨率</div>
+                </div>
+                <div class="bg-vr-black/50 p-3 rounded border border-vr-blue/20">
+                  <div class="text-vr-blue font-medium mb-1">120Hz</div>
+                  <div class="text-gray-400 text-xs">刷新率</div>
+                </div>
+                <div class="bg-vr-black/50 p-3 rounded border border-vr-blue/20">
+                  <div class="text-vr-blue font-medium mb-1">3-5小時</div>
+                  <div class="text-gray-400 text-xs">續航時間</div>
+                </div>
+                <div class="bg-vr-black/50 p-3 rounded border border-vr-blue/20">
+                  <div class="text-vr-blue font-medium mb-1">無線</div>
+                  <div class="text-gray-400 text-xs">連接方式</div>
+                </div>
+              </div>
+              <a href="#" class="inline-block px-6 py-2.5 bg-vr-blue hover:bg-vr-blue/80 text-white rounded-md font-medium transition-all duration-300">
+                閱讀完整評測
+              </a>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-vr-gray/30 rounded-lg overflow-hidden cyber-border hover-scale group flex flex-col sm:flex-row">
+              <div class="sm:w-1/3 relative">
+                <img src="https://upload.cc/i1/2025/08/03/c7bou8.png" 
+                     alt="Valve Index" 
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+                <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center">
+                  <i class="fa fa-star text-yellow-400 mr-1"></i> 9.7
+                </div>
+              </div>
+              <div class="sm:w-2/3 p-5">
+                <h3 class="font-cyber font-bold text-lg mb-2 group-hover:text-vr-cyan transition-colors">Valve Index</h3>
+                <p class="text-gray-400 text-sm mb-3">
+                  專業級PC VR設備，卓越的追蹤精度和刷新率，為硬核玩家打造。
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-300 text-sm">¥6,499 起</span>
+                  <a href="#" class="text-vr-cyan text-sm hover:underline">查看評測 →</a>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+    
+   
+    
+    <section class="py-20 relative">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto bg-gradient-to-r from-vr-purple/20 to-vr-cyan/20 rounded-2xl p-8 md:p-12 cyber-border relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-vr-purple/10 rounded-full filter blur-[80px]"></div>
+          <div class="absolute bottom-0 left-0 w-64 h-64 bg-vr-cyan/10 rounded-full filter blur-[80px]"></div>
+          
+          <div class="relative z-10 text-center mb-8">
+            <h2 class="font-cyber font-bold text-2xl md:text-3xl mb-4 animate-colorFlash">
+              獲取最新<span class="text-vr-cyan">VR資訊</span>
+            </h2>
+            <p class="text-gray-300 max-w-2xl mx-auto">
+              訂閱我們的通訊，第一時間獲取VR遊戲評測、行業動態和獨家優惠
+            </p>
+          </div>
+          
+        
+          <form class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto relative z-10" id="subscribe-form">
+            <input type="email" 
+                   placeholder="輸入您的郵箱地址" 
+                   required
+                   class="flex-1 px-4 py-3 bg-vr-gray/50 border border-vr-purple/30 rounded-md focus:outline-none focus:ring-2 focus:ring-vr-cyan/50 transition-all text-white placeholder-gray-500">
+            <button type="submit" class="bg-gradient-to-r from-vr-purple to-vr-cyan text-white px-6 py-3 rounded-md font-cyber font-medium transition-all duration-300 hover:shadow-lg hover:shadow-vr-purple/30 whitespace-nowrap">
+              立即訂閱
+            </button>
+          </form>
+          
+          <p class="text-xs text-gray-500 text-center mt-4 relative z-10">
+            訂閱即表示您同意我們的<a href="#" class="text-vr-cyan hover:underline">隱私政策</a>，我們不會向第三方分享您的信息，您可隨時取消訂閱。
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <footer class="bg-vr-black border-t border-vr-gray py-12 relative">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+        <div>
+        <a href="#" class="flex items-center">
+  <span class="font-cyber font-bold text-xl tracking-wider text-white">
+    NEXUS<span class="text-vr-cyan">VR</span>
+  </span>
+</a>
+          <p class="text-gray-400 mb-6 text-sm">
+            探索虛擬現實遊戲的無限可能，為玩家和開發者提供最前沿的VR內容。
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-vr-gray/30 flex items-center justify-center text-gray-400 hover:bg-vr-purple/30 hover:text-vr-purple transition-all duration-300">
+              <i class="fa fa-facebook"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-vr-gray/30 flex items-center justify-center text-gray-400 hover:bg-vr-purple/30 hover:text-vr-purple transition-all duration-300">
+              <i class="fa fa-twitter"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-vr-gray/30 flex items-center justify-center text-gray-400 hover:bg-vr-purple/30 hover:text-vr-purple transition-all duration-300">
+              <i class="fa fa-instagram"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-vr-gray/30 flex items-center justify-center text-gray-400 hover:bg-vr-purple/30 hover:text-vr-purple transition-all duration-300">
+              <i class="fa fa-youtube-play"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-cyber font-bold text-lg mb-6 text-white">快速鏈接</h4>
+          <div class="grid grid-cols-2 gap-3">
+            <ul class="space-y-3">
+              <li><a href="#games" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">VR遊戲庫</a></li>
+              <li><a href="#devices" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">設備評測</a></li>
+              <li><a href="#news" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">行業動態</a></li>
+              <li><a href="#development" class="text-gray-400 hover:text-vr-pink transition-colors text-sm">開發指南</a></li>
+            </ul>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">關於我們</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">聯繫我們</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">隱私政策</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-vr-cyan transition-colors text-sm">使用條款</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-vr-gray/50 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <p class="text-gray-500 text-sm mb-4 md:mb-0">
+          &copy; 2024 NexusVR. 保留所有權利。
+        </p>
+        <div class="flex items-center text-sm text-gray-500">
+          <a href="#" class="hover:text-gray-300">聯繫我們</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <button id="back-to-top" class="fixed bottom-8 right-8 bg-vr-purple hover:bg-vr-purple/80 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg opacity-0 invisible transition-all duration-300 hover:scale-110 z-50">
+    <i class="fa fa-chevron-up"></i>
+  </button>
+  
+  <script>
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const subscribeForm = document.getElementById('subscribe-form');
+    
+
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      const icon = mobileMenuBtn.querySelector('i');
+      if (mobileMenu.classList.contains('hidden')) {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      } else {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+      }
+    });
+    
+
+    let scrollTimeout;
+    function animateOnScroll() {
+
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const elements = document.querySelectorAll('.hover-scale');
+        
+        elements.forEach(element => {
+          const elementTop = element.getBoundingClientRect().top;
+          const elementVisible = 150;
+          
+          if (elementTop < window.innerHeight - elementVisible) {
+            element.classList.add('opacity-100');
+            element.classList.remove('opacity-0', 'translate-y-8');
+          }
+        });
+        
+
+        const backToTopBtn = document.getElementById('back-to-top');
+        if (window.scrollY > 500) {
+          backToTopBtn.classList.remove('opacity-0', 'invisible');
+          backToTopBtn.classList.add('opacity-100', 'visible');
+        } else {
+          backToTopBtn.classList.remove('opacity-100', 'visible');
+          backToTopBtn.classList.add('opacity-0', 'invisible');
+        }
+      }, 50); 
+    }
+    
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const animatedElements = document.querySelectorAll('.hover-scale');
+      animatedElements.forEach(el => {
+        el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-8');
+      });
+      
+      setTimeout(animateOnScroll, 300);
+      
+
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
+        
+        img.addEventListener('load', () => {
+          img.classList.remove('opacity-0');
+          img.classList.add('opacity-100');
+        });
+        
+        if (img.complete) {
+          img.classList.remove('opacity-0');
+          img.classList.add('opacity-100');
+        }
+      });
+    });
+    
+
+    window.addEventListener('scroll', animateOnScroll);
+    
+ 
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (!mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          const icon = mobileMenuBtn.querySelector('i');
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        }
+        
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+    
+
+    document.getElementById('back-to-top').addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+
+    subscribeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailInput = subscribeForm.querySelector('input[type="email"]');
+      const email = emailInput.value.trim();
+      
+      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+        alert('訂閱成功！我們將定期向您推送VR最新資訊。');
+        subscribeForm.reset();
+      } else {
+        alert('請輸入有效的郵箱地址');
+        emailInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
